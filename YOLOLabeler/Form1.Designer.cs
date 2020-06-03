@@ -35,6 +35,7 @@
             // 
             // colorPanel
             // 
+            this.colorPanel.AllowDrop = true;
             this.colorPanel.AutoScroll = true;
             this.colorPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.colorPanel.Controls.Add(this.labelInsertClasses);
@@ -43,15 +44,18 @@
             this.colorPanel.Name = "colorPanel";
             this.colorPanel.Size = new System.Drawing.Size(250, 551);
             this.colorPanel.TabIndex = 0;
+            this.colorPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.colorPanel_DragDrop);
+            this.colorPanel.DragOver += new System.Windows.Forms.DragEventHandler(this.colorPanel_DragOver);
             // 
             // labelInsertClasses
             // 
             this.labelInsertClasses.AutoSize = true;
-            this.labelInsertClasses.Location = new System.Drawing.Point(31, 17);
+            this.labelInsertClasses.Location = new System.Drawing.Point(55, 22);
             this.labelInsertClasses.Name = "labelInsertClasses";
-            this.labelInsertClasses.Size = new System.Drawing.Size(188, 20);
+            this.labelInsertClasses.Size = new System.Drawing.Size(136, 40);
             this.labelInsertClasses.TabIndex = 0;
-            this.labelInsertClasses.Text = "Browse for your .names file";
+            this.labelInsertClasses.Text = "Drag or Browse \r\nfor your .names file";
+            this.labelInsertClasses.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // Form1
             // 

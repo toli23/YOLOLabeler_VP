@@ -15,14 +15,14 @@ namespace YOLOLabeler
     {
         private Button browseClasses;
         private Random rnd = new Random();
-        private string[] arr;
-        int initTop = 80;
-        int initLeft = 20;
+        private ClassesDoc cd;
+
         public Form1()
         {
-            arr = null;
             InitializeComponent();
             InitializeDynamic();
+            cd = new ClassesDoc(browseClasses.Top + 50);
+            
           
         }
 
@@ -31,7 +31,7 @@ namespace YOLOLabeler
             browseClasses.Text = "Browse";
             browseClasses.Name = "btnBrowse";
             browseClasses.Height = 30;
-            browseClasses.Top = 40;
+            browseClasses.Top = 70;
             browseClasses.Left = 80;
             browseClasses.Click += browseClassesButton_Click;
             colorPanel.Controls.Add(browseClasses);
@@ -48,49 +48,81 @@ namespace YOLOLabeler
             {
     
                 var fileStream = dialog.OpenFile();
-                using (StreamReader reader = new StreamReader(fileStream))
+                string content = cd.ReadClassesFromFile(fileStream);
+                GenerateClasses(content);
+            }
+        }
+
+        private void GenerateClasses(string content)
+        {
+            if (cd.Classes.Count != 0)
+            {
+                foreach (string cls in cd.Classes)
                 {
-                    string content = reader.ReadToEnd();
-                    if (arr != null)
-                    {
-                        for (int i = 0; i < arr.Length; i++)
-                        {
-                            colorPanel.Controls.RemoveByKey("colorLabel_" + arr[i]);
-                            colorPanel.Controls.RemoveByKey("btnColor_" + arr[i]);
-                            initTop -= 20;
-                        }
-                    }
-                    arr = content.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+                    colorPanel.Controls.RemoveByKey("colorLabel_" + cls);
+                    colorPanel.Controls.RemoveByKey("btnColor_" + cls);
 
                 }
-
-                CreateClassesControls();
+                cd.CurrTop = cd.InitTop;
+                cd.RemoveAllColors();
             }
+            string[] arr = content.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+            cd.AddClasses(arr);
+
+            CreateClassesControls();
         }
 
         private void CreateClassesControls()
         {
-            for (int i = 0; i < arr.Length; i++)
+            foreach(string cls in cd.Classes)
             {
                 Label l = new Label();
-                l.Text = arr[i];
+                l.Text = cls;
                 l.Name = "colorLabel_" + l.Text;
                 Button b = new Button();
                 b.Name = "btnColor_" + l.Text;
                 b.Width = 35;
-                b.Top = initTop;
-                b.Left = initLeft;
-                l.Top = initTop;
-                l.Left = initLeft + b.Width;
-                initTop += 20;
+                b.Top = cd.CurrTop;
+                b.Left = cd.InitLeft;
+                l.Top = cd.CurrTop;
+                l.Left = cd.InitLeft + b.Width;
+                cd.CurrTop += 20;
                 Color c = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
                 b.BackColor = c;
-
+                cd.AddColor(c);
                 colorPanel.Controls.Add(b);
                 colorPanel.Controls.Add(l);
 
             }
         }
 
+        private void colorPanel_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                e.Effect = DragDropEffects.Link;
+            else
+                e.Effect = DragDropEffects.None;
+        }
+
+        private void colorPanel_DragDrop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                if(files.Length != 1)
+                {
+                    MessageBox.Show("You need to drag one .names file");
+                }
+                if (!Path.GetFileName(files[0]).EndsWith(".names"))
+                {
+                    MessageBox.Show("The selected file is not .names file");
+                }
+                string content = cd.ReadClassesFromFile(new FileStream(files[0], FileMode.Open, FileAccess.Read));
+                GenerateClasses(content);
+
+            }
+        }
+
+       
     }
 }
