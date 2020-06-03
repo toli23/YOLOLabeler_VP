@@ -14,8 +14,12 @@ namespace YOLOLabeler
     public partial class Form1 : Form
     {
         private Button browseClasses;
+        private Button browsePictures;
         private Random rnd = new Random();
         private ClassesDoc cd;
+        private Bitmap image;
+        string[] pics;
+        int currPic = 0;
         private Pen p;
         public Form1()
         {
@@ -23,6 +27,8 @@ namespace YOLOLabeler
             InitializeDynamic();
             cd = new ClassesDoc(browseClasses.Top + 50);
             p = null;
+            image = null;
+            pics = null;
             
           
         }
@@ -37,7 +43,16 @@ namespace YOLOLabeler
             browseClasses.Click += browseClassesButton_Click;
             colorPanel.Controls.Add(browseClasses);
 
-     
+
+            browsePictures = new Button();
+            browsePictures.Text = "Browse";
+            browsePictures.Name = "btnPicturesBrowse";
+            browsePictures.Height = 30;
+            browsePictures.Top = 60;
+            browsePictures.Left = 270;
+            browsePictures.Click += browsePicturesButton_Click;
+            mainPanel.Controls.Add(browsePictures);
+
         }
 
 
@@ -53,9 +68,31 @@ namespace YOLOLabeler
                 GenerateClasses(content);
             }
         }
-
+        private void browsePicturesButton_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+            if(dialog.ShowDialog() == DialogResult.OK)
+            {
+                string folderName = dialog.SelectedPath;
+                pics = Directory.GetFiles(folderName);
+                if (image != null)
+                {
+                    image.Dispose(); 
+                    image = null;
+                }
+                image = new Bitmap(pics[currPic]);
+                linkLabelNext.Visible = true;
+                pictureBox1.Image = image;
+            }
+        }
         private void colorButton_Click(object sender, EventArgs e)
         {
+            if(p != null)
+            {
+                p.Dispose();
+                p = null;
+            }
+
             p = new Pen(((Button)sender).BackColor, 1.0f);
         }
 
@@ -130,6 +167,45 @@ namespace YOLOLabeler
             }
         }
 
-       
+        private void linkLabelNext_Click(object sender, EventArgs e)
+        {
+            if(currPic == pics.Length - 2)
+            {
+                linkLabelNext.Visible = false;
+            }
+            if (image != null)
+            {
+                image.Dispose();
+                image = null;
+            }
+            image = new Bitmap(pics[++currPic]);
+            pictureBox1.Image = image;
+
+            if(currPic > 0)
+            {
+                linkLabelPrev.Visible = true;
+            }
+        }
+
+        private void linkLabelPrev_Click(object sender, EventArgs e)
+        {
+            if(currPic == 1)
+            {
+                linkLabelPrev.Visible = false;
+            }
+
+            if (image != null)
+            {
+                image.Dispose();
+                image = null;
+            }
+            image = new Bitmap(pics[--currPic]);
+            pictureBox1.Image = image;
+
+            if(currPic != (pics.Length - 1))
+            {
+                linkLabelNext.Visible = true;
+            }
+        }
     }
 }
