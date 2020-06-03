@@ -16,12 +16,13 @@ namespace YOLOLabeler
         private Button browseClasses;
         private Random rnd = new Random();
         private ClassesDoc cd;
-
+        private Pen p;
         public Form1()
         {
             InitializeComponent();
             InitializeDynamic();
             cd = new ClassesDoc(browseClasses.Top + 50);
+            p = null;
             
           
         }
@@ -51,6 +52,11 @@ namespace YOLOLabeler
                 string content = cd.ReadClassesFromFile(fileStream);
                 GenerateClasses(content);
             }
+        }
+
+        private void colorButton_Click(object sender, EventArgs e)
+        {
+            p = new Pen(((Button)sender).BackColor, 1.0f);
         }
 
         private void GenerateClasses(string content)
@@ -89,6 +95,7 @@ namespace YOLOLabeler
                 cd.CurrTop += 20;
                 Color c = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
                 b.BackColor = c;
+                b.Click += colorButton_Click;
                 cd.AddColor(c);
                 colorPanel.Controls.Add(b);
                 colorPanel.Controls.Add(l);

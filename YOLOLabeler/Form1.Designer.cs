@@ -40,9 +40,9 @@
             this.colorPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.colorPanel.Controls.Add(this.labelInsertClasses);
             this.colorPanel.Dock = System.Windows.Forms.DockStyle.Right;
-            this.colorPanel.Location = new System.Drawing.Point(716, 0);
+            this.colorPanel.Location = new System.Drawing.Point(734, 0);
             this.colorPanel.Name = "colorPanel";
-            this.colorPanel.Size = new System.Drawing.Size(250, 551);
+            this.colorPanel.Size = new System.Drawing.Size(250, 595);
             this.colorPanel.TabIndex = 0;
             this.colorPanel.DragDrop += new System.Windows.Forms.DragEventHandler(this.colorPanel_DragDrop);
             this.colorPanel.DragOver += new System.Windows.Forms.DragEventHandler(this.colorPanel_DragOver);
@@ -61,7 +61,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(966, 551);
+            this.ClientSize = new System.Drawing.Size(984, 575);
             this.Controls.Add(this.colorPanel);
             this.Name = "Form1";
             this.Text = "Form1";
