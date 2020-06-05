@@ -121,7 +121,7 @@ namespace YOLOLabeler
                 l.Name = "colorLabel_" + l.Text;
                 Button b = new Button();
                 b.Name = "btnColor_" + l.Text;
-                b.Width = 35;
+                b.Width = 45;
                 b.Top = cd.CurrTop;
                 b.Left = cd.InitLeft;
                 l.Top = cd.CurrTop;
@@ -210,52 +210,12 @@ namespace YOLOLabeler
             }
         }
 
-        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (s.PicturePaths.Count > 0 && cd.ClassObjects.Count > 0)
-            {
-                if(p == null)
-                {
-                    MessageBox.Show("Please select a class to label");
-                }
-                else
-                {
-                    if (e.Button == MouseButtons.Left)
-                    {
-                        s.isDrawing = true;
-                        s.StartPos = e.Location;
-                        s.EndPos = e.Location;
-                    }
-                }
-             
-            }
-        }
-
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
             s.EndPos = e.Location;
             if (s.isDrawing)
             {
                 pictureBox1.Invalidate();
-            }
-        }
-
-        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (s.PicturePaths.Count > 0 && cd.ClassObjects.Count > 0)
-            {
-                if (s.isDrawing)
-                {
-                    s.isDrawing = false;
-                    s.EndPos = e.Location;
-                    Rectangle rect = s.GetRectangle();
-                    if (rect.Width > 0 && rect.Height > 0)
-                    {
-                        s.AddPair(rect, p);
-                    }
-                    pictureBox1.Invalidate();
-
-                }
             }
         }
 
@@ -280,6 +240,40 @@ namespace YOLOLabeler
             
         }
 
-  
+        private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (s.PicturePaths.Count > 0 && cd.ClassObjects.Count > 0)
+            {
+                if (p == null)
+                {
+                    MessageBox.Show("Please select a class to label");
+                }
+                else
+                {
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        if (!s.isDrawing)
+                        {
+                            s.isDrawing = true;
+                            s.StartPos = e.Location;
+                            s.EndPos = e.Location;
+                        }
+
+                        else
+                        {
+                            s.isDrawing = false;
+                            s.EndPos = e.Location;
+                            Rectangle rect = s.GetRectangle();
+                            if (rect.Width > 0 && rect.Height > 0)
+                            {
+                                s.AddPair(rect, p);
+                            }
+                            pictureBox1.Invalidate();
+                        }
+                    }
+                }
+
+            }
+        }
     }
 }
