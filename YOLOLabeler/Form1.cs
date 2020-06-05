@@ -18,18 +18,18 @@ namespace YOLOLabeler
         private Random rnd = new Random();
         private ClassesDoc cd;
         private Bitmap image;
-        string[] pics;
-        int currPic = 0;
         private Pen p;
+        private Scene s;
+        
         public Form1()
         {
             InitializeComponent();
             InitializeDynamic();
             cd = new ClassesDoc(browseClasses.Top + 50);
             p = null;
+            s = new Scene();
             image = null;
-            pics = null;
-            
+           
           
         }
 
@@ -62,10 +62,13 @@ namespace YOLOLabeler
             dialog.Filter = ".names file (*.names)|*.names|All files (*.*)|*.*";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-    
-                var fileStream = dialog.OpenFile();
-                string content = cd.ReadClassesFromFile(fileStream);
-                GenerateClasses(content);
+
+                using (Stream fileStream = dialog.OpenFile())
+                {
+                    string content = cd.ReadClassesFromFile(fileStream);
+                    GenerateClasses(content);
+                }
+                                   
             }
         }
         private void browsePicturesButton_Click(object sender, EventArgs e)
@@ -74,50 +77,44 @@ namespace YOLOLabeler
             if(dialog.ShowDialog() == DialogResult.OK)
             {
                 string folderName = dialog.SelectedPath;
-                pics = Directory.GetFiles(folderName);
+                s.AddPaths(Directory.GetFiles(folderName));
                 if (image != null)
                 {
                     image.Dispose(); 
                     image = null;
                 }
-                image = new Bitmap(pics[currPic]);
+                image = new Bitmap(s.PicturePaths[s.currentPic]);
                 linkLabelNext.Visible = true;
                 pictureBox1.Image = image;
             }
         }
         private void colorButton_Click(object sender, EventArgs e)
         {
-            if(p != null)
-            {
-                p.Dispose();
-                p = null;
-            }
 
-            p = new Pen(((Button)sender).BackColor, 1.0f);
+            p = new Pen(((Button)sender).BackColor, 3.0f);
         }
 
         private void GenerateClasses(string content)
         {
-            if (cd.Classes.Count != 0)
+            if (cd.ClassObjects.Count != 0)
             {
-                foreach (string cls in cd.Classes)
+                foreach (string cls in cd.ClassObjects.Keys)
                 {
                     colorPanel.Controls.RemoveByKey("colorLabel_" + cls);
                     colorPanel.Controls.RemoveByKey("btnColor_" + cls);
 
                 }
                 cd.CurrTop = cd.InitTop;
-                cd.RemoveAllColors();
+                cd.Clear();
             }
             string[] arr = content.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
-            cd.AddClasses(arr);
 
-            CreateClassesControls();
+            CreateClassesControls(arr);
         }
 
-        private void CreateClassesControls()
+        private void CreateClassesControls(string[] arr)
         {
-            foreach(string cls in cd.Classes)
+            foreach(string cls in arr)
             {
                 Label l = new Label();
                 l.Text = cls;
@@ -133,7 +130,7 @@ namespace YOLOLabeler
                 Color c = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
                 b.BackColor = c;
                 b.Click += colorButton_Click;
-                cd.AddColor(c);
+                cd.AddClassAndColor(cls, c);
                 colorPanel.Controls.Add(b);
                 colorPanel.Controls.Add(l);
 
@@ -142,6 +139,7 @@ namespace YOLOLabeler
 
         private void colorPanel_DragOver(object sender, DragEventArgs e)
         {
+            
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 e.Effect = DragDropEffects.Link;
             else
@@ -161,15 +159,19 @@ namespace YOLOLabeler
                 {
                     MessageBox.Show("The selected file is not .names file");
                 }
-                string content = cd.ReadClassesFromFile(new FileStream(files[0], FileMode.Open, FileAccess.Read));
-                GenerateClasses(content);
+                using(Stream fileStream = new FileStream(files[0], FileMode.Open, FileAccess.Read))
+                {
+                    string content = cd.ReadClassesFromFile(fileStream);
+                    GenerateClasses(content);
+                }
+                
 
             }
         }
 
         private void linkLabelNext_Click(object sender, EventArgs e)
         {
-            if(currPic == pics.Length - 2)
+            if(s.currentPic == s.PicturePaths.Count - 2)
             {
                 linkLabelNext.Visible = false;
             }
@@ -178,10 +180,10 @@ namespace YOLOLabeler
                 image.Dispose();
                 image = null;
             }
-            image = new Bitmap(pics[++currPic]);
+            image = new Bitmap(s.PicturePaths[++s.currentPic]);
             pictureBox1.Image = image;
 
-            if(currPic > 0)
+            if(s.currentPic > 0)
             {
                 linkLabelPrev.Visible = true;
             }
@@ -189,7 +191,7 @@ namespace YOLOLabeler
 
         private void linkLabelPrev_Click(object sender, EventArgs e)
         {
-            if(currPic == 1)
+            if(s.currentPic == 1)
             {
                 linkLabelPrev.Visible = false;
             }
@@ -199,13 +201,85 @@ namespace YOLOLabeler
                 image.Dispose();
                 image = null;
             }
-            image = new Bitmap(pics[--currPic]);
+            image = new Bitmap(s.PicturePaths[--s.currentPic]);
             pictureBox1.Image = image;
 
-            if(currPic != (pics.Length - 1))
+            if(s.currentPic != (s.PicturePaths.Count - 1))
             {
                 linkLabelNext.Visible = true;
             }
         }
+
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (s.PicturePaths.Count > 0 && cd.ClassObjects.Count > 0)
+            {
+                if(p == null)
+                {
+                    MessageBox.Show("Please select a class to label");
+                }
+                else
+                {
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        s.isDrawing = true;
+                        s.StartPos = e.Location;
+                        s.EndPos = e.Location;
+                    }
+                }
+             
+            }
+        }
+
+        private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
+        {
+            s.EndPos = e.Location;
+            if (s.isDrawing)
+            {
+                pictureBox1.Invalidate();
+            }
+        }
+
+        private void pictureBox1_MouseUp(object sender, MouseEventArgs e)
+        {
+            if (s.PicturePaths.Count > 0 && cd.ClassObjects.Count > 0)
+            {
+                if (s.isDrawing)
+                {
+                    s.isDrawing = false;
+                    s.EndPos = e.Location;
+                    Rectangle rect = s.GetRectangle();
+                    if (rect.Width > 0 && rect.Height > 0)
+                    {
+                        s.AddPair(rect, p);
+                    }
+                    pictureBox1.Invalidate();
+
+                }
+            }
+        }
+
+        private void pictureBox1_Paint(object sender, PaintEventArgs e)
+        {
+           
+           if (s.BBoxes.Count > 0 && s.BBoxes[s.currentPic].Count > 0)
+           {
+                s.DrawAll(e.Graphics);
+           }
+           if (s.isDrawing)
+           {
+                Rectangle r = s.GetRectangle();
+                Color c = Color.FromArgb(128, p.Color.R, p.Color.G, p.Color.B);
+                Brush b = new SolidBrush(c);
+                e.Graphics.DrawRectangle(p, r);
+                e.Graphics.FillRectangle(b, r);
+                b.Dispose();
+                
+           }
+               
+            
+        }
+
+  
     }
 }

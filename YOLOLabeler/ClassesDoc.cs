@@ -11,40 +11,33 @@ namespace YOLOLabeler
         public int InitTop { get; set; }
         public int InitLeft { get; set; }
         public int CurrTop { get; set; }
-        public List<string> Classes { get; set; }
-        public List<Color>  Colors { get; set; }
+        public Dictionary<string,Color> ClassObjects { get; set; }
 
         public ClassesDoc(int InitTop)
         {
             this.InitTop = InitTop;
             InitLeft = 20;
             CurrTop = InitTop;
-            Classes = new List<string>();
-            Colors = new List<Color>();
+            ClassObjects = new Dictionary<string, Color>();
+        }
+        
+        public void Clear()
+        {
+            ClassObjects.Clear();
         }
 
-        public void AddClasses(string[] classes)
+        public void AddClassAndColor(string cls, Color c)
         {
-            if(Classes.Count != 0)
-            {
-                Classes.Clear();
-            }
-            Classes.AddRange(classes);
+
+            ClassObjects[cls] = c;
         }
 
-        public void AddColor(Color c)
-        {
-            Colors.Add(c);
-        }
-        public void RemoveAllColors()
-        {
-            Colors.Clear();
-        }
         public string ReadClassesFromFile(Stream fileStream)
         {
             using (StreamReader streamReader = new StreamReader(fileStream))
             {
                 string content = streamReader.ReadToEnd();
+                fileStream.Close();
                 return content;
             }
         }
