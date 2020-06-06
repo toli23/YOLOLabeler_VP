@@ -87,7 +87,13 @@ namespace YOLOLabeler
             if(dialog.ShowDialog() == DialogResult.OK)
             {
                 string folderName = dialog.SelectedPath;
-                s.AddPaths(Directory.GetFiles(folderName));
+                string[] paths = Directory.GetFiles(folderName);
+                if(paths.Length == 0)
+                {
+                    MessageBox.Show("Folder is empty");
+                    return;
+                }
+                s.AddPaths(paths);
                 if (image != null)
                 {
                     image.Dispose(); 
