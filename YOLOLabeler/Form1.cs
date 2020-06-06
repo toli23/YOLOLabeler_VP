@@ -15,8 +15,8 @@ namespace YOLOLabeler
     {
         private Button browseClasses;
         private Button browsePictures;
+        private Button saveLabels;
         private Random rnd = new Random();
-        private ClassesDoc cd;
         private Bitmap image;
         private Pen p;
         private Scene s;
@@ -25,9 +25,8 @@ namespace YOLOLabeler
         {
             InitializeComponent();
             InitializeDynamic();
-            cd = new ClassesDoc(browseClasses.Top + 50);
             p = null;
-            s = new Scene();
+            s = new Scene(browseClasses.Top + 50, pictureBox1.Width, pictureBox1.Height);
             image = null;
            
           
@@ -39,7 +38,7 @@ namespace YOLOLabeler
             browseClasses.Name = "btnBrowse";
             browseClasses.Height = 30;
             browseClasses.Top = 70;
-            browseClasses.Left = 80;
+            browseClasses.Left = (colorPanel.Width / 2) - (browseClasses.Width / 2);
             browseClasses.Click += browseClassesButton_Click;
             colorPanel.Controls.Add(browseClasses);
 
@@ -48,10 +47,21 @@ namespace YOLOLabeler
             browsePictures.Text = "Browse";
             browsePictures.Name = "btnPicturesBrowse";
             browsePictures.Height = 30;
-            browsePictures.Top = 60;
-            browsePictures.Left = 270;
+            browsePictures.Top = 45;
+            browsePictures.Left = (mainPanel.Width / 2) - (browsePictures.Width / 2);
             browsePictures.Click += browsePicturesButton_Click;
             mainPanel.Controls.Add(browsePictures);
+
+            saveLabels = new Button();
+            saveLabels.Text = "Save Label";
+            saveLabels.Name = "btnSaveLabel";
+            saveLabels.Width = 90;
+            saveLabels.Height = 30;
+            saveLabels.Top = pictureBox1.Top + pictureBox1.Height + 20;
+            saveLabels.Left = (mainPanel.Width / 2) - (saveLabels.Width / 2);
+            saveLabels.Click += btnSaveLabel_Click;
+            saveLabels.Visible = false;
+            mainPanel.Controls.Add(saveLabels);
 
         }
 
@@ -65,7 +75,7 @@ namespace YOLOLabeler
 
                 using (Stream fileStream = dialog.OpenFile())
                 {
-                    string content = cd.ReadClassesFromFile(fileStream);
+                    string content = s.cd.ReadClassesFromFile(fileStream);
                     GenerateClasses(content);
                 }
                                    
@@ -85,7 +95,20 @@ namespace YOLOLabeler
                 }
                 image = new Bitmap(s.PicturePaths[s.currentPic]);
                 linkLabelNext.Visible = true;
+                saveLabels.Visible = true;
                 pictureBox1.Image = image;
+            }
+        }
+
+        private void btnSaveLabel_Click(object sender, EventArgs e)
+        {
+            if(s.BBoxes[s.currentPic].Count == 0)
+            {
+                MessageBox.Show("There are no objects selected");
+            }
+            else
+            {
+                s.SaveLabels();
             }
         }
         private void colorButton_Click(object sender, EventArgs e)
@@ -96,16 +119,16 @@ namespace YOLOLabeler
 
         private void GenerateClasses(string content)
         {
-            if (cd.ClassObjects.Count != 0)
+            if (s.cd.ClassObjects.Count != 0)
             {
-                foreach (string cls in cd.ClassObjects.Keys)
+                foreach(Tuple<string, int> t in s.cd.ClassObjects.Values)
                 {
-                    colorPanel.Controls.RemoveByKey("colorLabel_" + cls);
-                    colorPanel.Controls.RemoveByKey("btnColor_" + cls);
+                    colorPanel.Controls.RemoveByKey("colorLabel_" + t.Item1);
+                    colorPanel.Controls.RemoveByKey("btnColor_" + t.Item1);
 
                 }
-                cd.CurrTop = cd.InitTop;
-                cd.Clear();
+                s.cd.CurrTop = s.cd.InitTop;
+                s.cd.Clear();
             }
             string[] arr = content.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
 
@@ -114,23 +137,27 @@ namespace YOLOLabeler
 
         private void CreateClassesControls(string[] arr)
         {
-            foreach(string cls in arr)
+            for(int i = 0; i < arr.Length; i++)
             {
                 Label l = new Label();
-                l.Text = cls;
+                l.Text = arr[i];
                 l.Name = "colorLabel_" + l.Text;
                 Button b = new Button();
                 b.Name = "btnColor_" + l.Text;
                 b.Width = 45;
-                b.Top = cd.CurrTop;
-                b.Left = cd.InitLeft;
-                l.Top = cd.CurrTop;
-                l.Left = cd.InitLeft + b.Width;
-                cd.CurrTop += 20;
+                b.Top = s.cd.CurrTop;
+                b.Left = s.cd.InitLeft;
+                l.Top = s.cd.CurrTop;
+                l.Left = s.cd.InitLeft + b.Width;
+                s.cd.CurrTop += 20;
                 Color c = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
+                if (s.cd.ColorExists(c))
+                {
+                    c = Color.FromArgb(rnd.Next(256), rnd.Next(256), rnd.Next(256));
+                }
                 b.BackColor = c;
                 b.Click += colorButton_Click;
-                cd.AddClassAndColor(cls, c);
+                s.cd.AddClassAndColor(c, arr[i], i);
                 colorPanel.Controls.Add(b);
                 colorPanel.Controls.Add(l);
 
@@ -161,7 +188,7 @@ namespace YOLOLabeler
                 }
                 using(Stream fileStream = new FileStream(files[0], FileMode.Open, FileAccess.Read))
                 {
-                    string content = cd.ReadClassesFromFile(fileStream);
+                    string content = s.cd.ReadClassesFromFile(fileStream);
                     GenerateClasses(content);
                 }
                 
@@ -222,7 +249,7 @@ namespace YOLOLabeler
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
            
-           if (s.BBoxes.Count > 0 && s.BBoxes[s.currentPic].Count > 0)
+           if (!s.IsBBoxesEmpty() && s.BBoxes[s.currentPic].Count > 0)
            {
                 s.DrawAll(e.Graphics);
            }
@@ -242,7 +269,7 @@ namespace YOLOLabeler
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
-            if (s.PicturePaths.Count > 0 && cd.ClassObjects.Count > 0)
+            if (!s.IsPathsEmpty() && !s.cd.IsEmpty())
             {
                 if (p == null)
                 {

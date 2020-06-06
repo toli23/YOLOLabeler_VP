@@ -57,7 +57,7 @@
             // labelInsertClasses
             // 
             this.labelInsertClasses.AutoSize = true;
-            this.labelInsertClasses.Location = new System.Drawing.Point(55, 22);
+            this.labelInsertClasses.Location = new System.Drawing.Point(60, 22);
             this.labelInsertClasses.Name = "labelInsertClasses";
             this.labelInsertClasses.Size = new System.Drawing.Size(136, 40);
             this.labelInsertClasses.TabIndex = 0;
@@ -70,15 +70,15 @@
             this.mainPanel.Controls.Add(this.linkLabelPrev);
             this.mainPanel.Controls.Add(this.pictureBox1);
             this.mainPanel.Controls.Add(this.labelPictures);
-            this.mainPanel.Location = new System.Drawing.Point(70, 24);
+            this.mainPanel.Location = new System.Drawing.Point(0, 24);
             this.mainPanel.Name = "mainPanel";
-            this.mainPanel.Size = new System.Drawing.Size(634, 638);
+            this.mainPanel.Size = new System.Drawing.Size(773, 644);
             this.mainPanel.TabIndex = 1;
             // 
             // linkLabelNext
             // 
             this.linkLabelNext.AutoSize = true;
-            this.linkLabelNext.Location = new System.Drawing.Point(456, 82);
+            this.linkLabelNext.Location = new System.Drawing.Point(590, 82);
             this.linkLabelNext.Name = "linkLabelNext";
             this.linkLabelNext.Size = new System.Drawing.Size(40, 20);
             this.linkLabelNext.TabIndex = 3;
@@ -90,7 +90,7 @@
             // linkLabelPrev
             // 
             this.linkLabelPrev.AutoSize = true;
-            this.linkLabelPrev.Location = new System.Drawing.Point(96, 82);
+            this.linkLabelPrev.Location = new System.Drawing.Point(159, 82);
             this.linkLabelPrev.Name = "linkLabelPrev";
             this.linkLabelPrev.Size = new System.Drawing.Size(64, 20);
             this.linkLabelPrev.TabIndex = 2;
@@ -103,7 +103,7 @@
             // 
             this.pictureBox1.Location = new System.Drawing.Point(0, 116);
             this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(634, 512);
+            this.pictureBox1.Size = new System.Drawing.Size(773, 461);
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBox1.TabIndex = 1;
             this.pictureBox1.TabStop = false;
@@ -114,7 +114,7 @@
             // labelPictures
             // 
             this.labelPictures.AutoSize = true;
-            this.labelPictures.Location = new System.Drawing.Point(227, 12);
+            this.labelPictures.Location = new System.Drawing.Point(305, 0);
             this.labelPictures.Name = "labelPictures";
             this.labelPictures.Size = new System.Drawing.Size(161, 40);
             this.labelPictures.TabIndex = 0;
