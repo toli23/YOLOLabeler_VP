@@ -99,8 +99,12 @@ namespace YOLOLabeler
                 rows.Add(string.Format("{0} {1} {2} {3} {4}", cls_ind, x, y, w, h));
             }
 
-            string path = Path.GetFileNameWithoutExtension(PicturePaths[currentPic]) + ".txt";
-            File.WriteAllLines(path, rows);
+            string FileName = Path.GetFileNameWithoutExtension(PicturePaths[currentPic]) + ".txt";
+            if (!Directory.Exists("labels"))
+            {
+                Directory.CreateDirectory("labels");
+            }
+            File.WriteAllLines(Path.Combine("labels", FileName), rows);
         }
 
     }
