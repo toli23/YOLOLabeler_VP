@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Net;
@@ -14,6 +15,9 @@ namespace YOLOLabeler
         public List<Dictionary<Rectangle, Pen>> BBoxes { get; set; }
         public Point StartPos { get; set; }
         public Point EndPos { get; set; }
+
+        public Point currentPoint { get; set; }
+
         public int currentPic { get; set; }
         public bool isDrawing { get; set; }
 
@@ -32,8 +36,13 @@ namespace YOLOLabeler
             isDrawing = false;
             Width = w;
             Height = h;
+            currentPoint = Point.Empty;
         }
+        public void SetCurrentPoint(Point p)
+        {
+            currentPoint = p;
 
+        }
         public void AddPaths(string[] paths)
         {
             PicturePaths.AddRange(paths);
@@ -58,7 +67,8 @@ namespace YOLOLabeler
 
         public void DrawAll(Graphics g)
         {
-            foreach(KeyValuePair<Rectangle,Pen> pair in BBoxes[currentPic])
+            
+            foreach (KeyValuePair<Rectangle,Pen> pair in BBoxes[currentPic])
             {
                 Color c = Color.FromArgb(128, pair.Value.Color.R, pair.Value.Color.G, pair.Value.Color.B);
                 Brush b = new SolidBrush(c);
@@ -68,6 +78,15 @@ namespace YOLOLabeler
                 b.Dispose();
                 
             }
+            DrawLines(g);
+        }
+        public void DrawLines (Graphics g)
+        {
+            Pen po = new Pen(Color.Gray, 1);
+            po.DashStyle = DashStyle.Dot;
+            g.DrawLine(po, new Point(0, currentPoint.Y), new Point(Width, currentPoint.Y));
+            g.DrawLine(po, new Point(currentPoint.X, 0), new Point(currentPoint.X, Height));
+            po.Dispose();
         }
 
         public Rectangle GetRectangle()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,6 +22,8 @@ namespace YOLOLabeler
         private Pen p;
         private Scene s;
         
+
+        
         public Form1()
         {
             InitializeComponent();
@@ -28,7 +31,7 @@ namespace YOLOLabeler
             p = null;
             s = new Scene(browseClasses.Top + 50, pictureBox1.Width, pictureBox1.Height);
             image = null;
-           
+ 
           
         }
 
@@ -103,6 +106,7 @@ namespace YOLOLabeler
                 linkLabelNext.Visible = true;
                 saveLabels.Visible = true;
                 pictureBox1.Image = image;
+                toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
             }
         }
 
@@ -204,6 +208,10 @@ namespace YOLOLabeler
 
         private void linkLabelNext_Click(object sender, EventArgs e)
         {
+            if (s.isDrawing)
+            {
+                s.isDrawing = false;
+            }
             if(s.currentPic == s.PicturePaths.Count - 2)
             {
                 linkLabelNext.Visible = false;
@@ -215,8 +223,9 @@ namespace YOLOLabeler
             }
             image = new Bitmap(s.PicturePaths[++s.currentPic]);
             pictureBox1.Image = image;
+            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
 
-            if(s.currentPic > 0)
+            if (s.currentPic > 0)
             {
                 linkLabelPrev.Visible = true;
             }
@@ -224,7 +233,11 @@ namespace YOLOLabeler
 
         private void linkLabelPrev_Click(object sender, EventArgs e)
         {
-            if(s.currentPic == 1)
+            if (s.isDrawing)
+            {
+                s.isDrawing = false;
+            }
+            if (s.currentPic == 1)
             {
                 linkLabelPrev.Visible = false;
             }
@@ -236,8 +249,9 @@ namespace YOLOLabeler
             }
             image = new Bitmap(s.PicturePaths[--s.currentPic]);
             pictureBox1.Image = image;
+            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
 
-            if(s.currentPic != (s.PicturePaths.Count - 1))
+            if (s.currentPic != (s.PicturePaths.Count - 1))
             {
                 linkLabelNext.Visible = true;
             }
@@ -246,19 +260,27 @@ namespace YOLOLabeler
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
             s.EndPos = e.Location;
-            if (s.isDrawing)
-            {
-                pictureBox1.Invalidate();
-            }
+            s.currentPoint = e.Location;
+
+            toolStripStatusLabel1.Text = string.Format("X: {0}, Y: {1} ", e.Location.X,e.Location.Y);
+
+            
+            pictureBox1.Invalidate(true);
+            
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-           
-           if (!s.IsBBoxesEmpty() && s.BBoxes[s.currentPic].Count > 0)
+            
+            if (!s.IsBBoxesEmpty() && s.BBoxes[s.currentPic].Count > 0)
            {
                 s.DrawAll(e.Graphics);
            }
+            else if(!s.IsPathsEmpty())
+            {
+                
+                s.DrawLines(e.Graphics);
+            }
            if (s.isDrawing)
            {
                 Rectangle r = s.GetRectangle();
@@ -268,8 +290,13 @@ namespace YOLOLabeler
                 e.Graphics.FillRectangle(b, r);
                 b.Dispose();
                 
-           }
-               
+
+
+            }
+            if (!s.IsPathsEmpty())
+            {
+                toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
+            }
             
         }
 
@@ -285,6 +312,7 @@ namespace YOLOLabeler
                 {
                     if (e.Button == MouseButtons.Left)
                     {
+
                         if (!s.isDrawing)
                         {
                             s.isDrawing = true;
