@@ -75,7 +75,12 @@ namespace YOLOLabeler
             dialog.Filter = ".names file (*.names)|*.names|All files (*.*)|*.*";
             if (dialog.ShowDialog() == DialogResult.OK)
             {
-
+                if (!Path.GetFileName(dialog.FileName).EndsWith(".names"))
+                {
+                    MessageBox.Show("The selected file is not .names file");
+                    return;
+                }
+               
                 using (Stream fileStream = dialog.OpenFile())
                 {
                     string content = s.cd.ReadClassesFromFile(fileStream);
@@ -191,10 +196,12 @@ namespace YOLOLabeler
                 if(files.Length != 1)
                 {
                     MessageBox.Show("You need to drag one .names file");
+                    return;
                 }
                 if (!Path.GetFileName(files[0]).EndsWith(".names"))
                 {
                     MessageBox.Show("The selected file is not .names file");
+                    return;
                 }
                 using(Stream fileStream = new FileStream(files[0], FileMode.Open, FileAccess.Read))
                 {
