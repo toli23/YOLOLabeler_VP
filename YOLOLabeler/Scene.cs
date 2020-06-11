@@ -93,7 +93,7 @@ namespace YOLOLabeler
         }
         public void DrawLines (Graphics g)
         {
-            Pen po = new Pen(Color.YellowGreen, 2);
+            Pen po = new Pen(Color.Gold, 3.5f);
             po.DashStyle = DashStyle.Dot;
             g.DrawLine(po, new Point(0, currentPoint.Y), new Point(Width, currentPoint.Y));
             g.DrawLine(po, new Point(currentPoint.X, 0), new Point(currentPoint.X, Height));
