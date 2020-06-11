@@ -395,31 +395,39 @@ namespace YOLOLabeler
         }
         private void LoadFiles()
         {
-            if (image != null)
+           
+            if (!s.IsPathsEmpty())
             {
-                image.Dispose();
-                image = null;
-            }
-            image = new Bitmap(s.PicturePaths[s.currentPic]);
-            pictureBox1.Image = image;
-            saveLabels.Visible = true;
-            
-            if (s.currentPic == 0)
-            {
-                linkLabelNext.Visible = true;
-                linkLabelPrev.Visible = false;
+                if (image != null)
+                {
+                    image.Dispose();
+                    image = null;
+                }
 
+                image = new Bitmap(s.PicturePaths[s.currentPic]);
+                pictureBox1.Image = image;
+                saveLabels.Visible = true;
+
+                if (s.currentPic == 0)
+                {
+                    linkLabelNext.Visible = true;
+                    linkLabelPrev.Visible = false;
+
+                }
+                else if (s.currentPic == s.PicturePaths.Count - 2)
+                {
+                    linkLabelNext.Visible = false;
+                    linkLabelPrev.Visible = true;
+                }
+                else
+                {
+                    linkLabelNext.Visible = true;
+                    linkLabelPrev.Visible = true;
+                }
             }
-            else if (s.currentPic == s.PicturePaths.Count - 2)
-            {
-                linkLabelNext.Visible = false;
-                linkLabelPrev.Visible = true;
-            }
-            else
-            {
-                linkLabelNext.Visible = true;
-                linkLabelPrev.Visible = true;
-            }
+           
+            
+          
             if (s.cd.ClassObjects.Count != 0)
             {
                 foreach (Tuple<string, int> t in s.cd.ClassObjects.Values)
