@@ -450,6 +450,14 @@ namespace YOLOLabeler
                 }
             }
         }
+        private void undoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            s.Undo();
+            
+            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
+            pictureBox1.Invalidate();
 
+        }
     }
+    
 }

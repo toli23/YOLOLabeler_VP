@@ -29,6 +29,9 @@ namespace YOLOLabeler
 
         public float PenWidth { get; set; }
 
+        public List<Stack<Action>> UndoList{ get; set; }
+
+
         public Scene(int initTop, int w, int h)
         {
             PicturePaths = new List<string>();
@@ -42,6 +45,7 @@ namespace YOLOLabeler
             Height = h;
             currentPoint = Point.Empty;
             PenWidth = 3.0f;
+            UndoList = new List<Stack<Action>>();
         }
         public void SetCurrentPoint(Point p)
         {
@@ -54,12 +58,14 @@ namespace YOLOLabeler
             for(int i = 0; i < PicturePaths.Count; i++)
             {
                 BBoxes.Add(new Dictionary<Rectangle, Color>());
+                UndoList.Add(new Stack<Action>());
             }
         }
 
         public void AddPair(Rectangle r, Color c)
         {
             BBoxes[currentPic][r] = c;
+            UndoList[currentPic].Push(new Action(new KeyValuePair<Rectangle, Color>(r,c)));
         }
         public bool IsPathsEmpty()
         {
@@ -129,6 +135,17 @@ namespace YOLOLabeler
                 Directory.CreateDirectory("labels");
             }
             File.WriteAllLines(Path.Combine("labels", FileName), rows);
+        }
+        public void Undo()
+        {
+            if (UndoList[currentPic].Count != 0)
+            {
+                Action a = UndoList[currentPic].Pop();
+
+
+                BBoxes[currentPic].Remove(a.LastAction.Key);
+                
+            }
         }
 
     }
