@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -21,7 +23,7 @@ namespace YOLOLabeler
         private Bitmap image;
         private Pen p;
         private Scene s;
-        
+        private string filename;
 
         
         public Form1()
@@ -31,7 +33,7 @@ namespace YOLOLabeler
             p = null;
             s = new Scene(browseClasses.Top + 50, pictureBox1.Width, pictureBox1.Height);
             image = null;
- 
+            filename = string.Empty;
           
         }
 
@@ -129,14 +131,14 @@ namespace YOLOLabeler
         private void colorButton_Click(object sender, EventArgs e)
         {
 
-            p = new Pen(((Button)sender).BackColor, 3.0f);
+            p = new Pen(((Button)sender).BackColor, s.PenWidth);
         }
 
         private void GenerateClasses(string content)
         {
             if (s.cd.ClassObjects.Count != 0)
             {
-                foreach(Tuple<string, int> t in s.cd.ClassObjects.Values)
+                foreach (Tuple<string, int> t in s.cd.ClassObjects.Values)
                 {
                     colorPanel.Controls.RemoveByKey("colorLabel_" + t.Item1);
                     colorPanel.Controls.RemoveByKey("btnColor_" + t.Item1);
@@ -334,7 +336,7 @@ namespace YOLOLabeler
                             Rectangle rect = s.GetRectangle();
                             if (rect.Width > 0 && rect.Height > 0)
                             {
-                                s.AddPair(rect, p);
+                                s.AddPair(rect, p.Color);
                             }
                             pictureBox1.Invalidate();
                         }
@@ -343,5 +345,111 @@ namespace YOLOLabeler
 
             }
         }
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Title = "Save our project";
+            saveFileDialog.Filter = "Yolo Labeller Project |*.ylp";
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                filename = saveFileDialog.FileName;
+                using (FileStream stream = new FileStream(saveFileDialog.FileName, FileMode.OpenOrCreate))
+                {
+                    IFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(stream, s);
+                }
+            }
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (filename != string.Empty)
+            {
+                using (FileStream stream = new FileStream(filename, FileMode.OpenOrCreate))
+                {
+                    IFormatter formatter = new BinaryFormatter();
+                    formatter.Serialize(stream, s);
+                }
+            }
+            else
+            {
+                saveAsToolStripMenuItem_Click(sender, e);
+            }
+        }
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Title = "Open our project";
+            openFileDialog.Filter = "Yolo Labeller Project |*.ylp";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                using (FileStream stream = new FileStream(openFileDialog.FileName, FileMode.Open))
+                {
+                    IFormatter formatter = new BinaryFormatter();
+                    s = (Scene)formatter.Deserialize(stream);
+                    filename = openFileDialog.FileName;
+
+                }
+                LoadFiles();
+            }
+        }
+        private void LoadFiles()
+        {
+            if (image != null)
+            {
+                image.Dispose();
+                image = null;
+            }
+            image = new Bitmap(s.PicturePaths[s.currentPic]);
+            pictureBox1.Image = image;
+            saveLabels.Visible = true;
+            
+            if (s.currentPic == 0)
+            {
+                linkLabelNext.Visible = true;
+                linkLabelPrev.Visible = false;
+
+            }
+            else if (s.currentPic == s.PicturePaths.Count - 2)
+            {
+                linkLabelNext.Visible = false;
+                linkLabelPrev.Visible = true;
+            }
+            else
+            {
+                linkLabelNext.Visible = true;
+                linkLabelPrev.Visible = true;
+            }
+            if (s.cd.ClassObjects.Count != 0)
+            {
+                foreach (Tuple<string, int> t in s.cd.ClassObjects.Values)
+                {
+                    colorPanel.Controls.RemoveByKey("colorLabel_" + t.Item1);
+                    colorPanel.Controls.RemoveByKey("btnColor_" + t.Item1);
+
+                }
+                s.cd.CurrTop = s.cd.InitTop;
+                foreach (KeyValuePair < Color, Tuple<string, int>> pair in s.cd.ClassObjects)
+                {
+                    Label l = new Label();
+                    l.Text = pair.Value.Item1;
+                    l.Name = "colorLabel_" + l.Text;
+                    Button b = new Button();
+                    b.Name = "btnColor_" + l.Text;
+                    b.Width = 45;
+                    b.Top = s.cd.CurrTop;
+                    b.Left = s.cd.InitLeft;
+                    l.Top = s.cd.CurrTop;
+                    l.Left = s.cd.InitLeft + b.Width;
+                    s.cd.CurrTop += 20;
+                    b.BackColor = pair.Key;
+                    b.Click += colorButton_Click;
+                    colorPanel.Controls.Add(b);
+                    colorPanel.Controls.Add(l);
+
+                }
+            }
+        }
+
     }
 }

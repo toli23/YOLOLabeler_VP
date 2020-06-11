@@ -6,6 +6,7 @@ using System.Text;
 
 namespace YOLOLabeler
 {
+    [Serializable]
     public class ClassesDoc
     {
         public int InitTop { get; set; }

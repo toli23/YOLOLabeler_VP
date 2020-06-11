@@ -9,10 +9,12 @@ using System.Text;
 
 namespace YOLOLabeler
 {
+
+    [Serializable]
     public class Scene
     {
         public List<string> PicturePaths { get; set; }
-        public List<Dictionary<Rectangle, Pen>> BBoxes { get; set; }
+        public List<Dictionary<Rectangle, Color>> BBoxes { get; set; }
         public Point StartPos { get; set; }
         public Point EndPos { get; set; }
 
@@ -25,10 +27,12 @@ namespace YOLOLabeler
         public int Height { get; set; }
         public ClassesDoc cd { get; set; }
 
+        public float PenWidth { get; set; }
+
         public Scene(int initTop, int w, int h)
         {
             PicturePaths = new List<string>();
-            BBoxes = new List<Dictionary<Rectangle, Pen>>();
+            BBoxes = new List<Dictionary<Rectangle, Color>>();
             cd = new ClassesDoc(initTop);
             currentPic = 0;
             StartPos = Point.Empty;
@@ -37,6 +41,7 @@ namespace YOLOLabeler
             Width = w;
             Height = h;
             currentPoint = Point.Empty;
+            PenWidth = 3.0f;
         }
         public void SetCurrentPoint(Point p)
         {
@@ -48,13 +53,13 @@ namespace YOLOLabeler
             PicturePaths.AddRange(paths);
             for(int i = 0; i < PicturePaths.Count; i++)
             {
-                BBoxes.Add(new Dictionary<Rectangle, Pen>());
+                BBoxes.Add(new Dictionary<Rectangle, Color>());
             }
         }
 
-        public void AddPair(Rectangle r, Pen p)
+        public void AddPair(Rectangle r, Color c)
         {
-            BBoxes[currentPic][r] = p;
+            BBoxes[currentPic][r] = c;
         }
         public bool IsPathsEmpty()
         {
@@ -68,12 +73,12 @@ namespace YOLOLabeler
         public void DrawAll(Graphics g)
         {
             
-            foreach (KeyValuePair<Rectangle,Pen> pair in BBoxes[currentPic])
+            foreach (KeyValuePair<Rectangle,Color> pair in BBoxes[currentPic])
             {
-                Color c = Color.FromArgb(128, pair.Value.Color.R, pair.Value.Color.G, pair.Value.Color.B);
+                Color c = Color.FromArgb(128, pair.Value.R, pair.Value.G, pair.Value.B);
                 Brush b = new SolidBrush(c);
-
-                g.DrawRectangle(pair.Value, pair.Key);
+                Pen p = new Pen(pair.Value,PenWidth);
+                g.DrawRectangle(p, pair.Key);
                 g.FillRectangle(b, pair.Key);
                 b.Dispose();
                 
@@ -82,7 +87,7 @@ namespace YOLOLabeler
         }
         public void DrawLines (Graphics g)
         {
-            Pen po = new Pen(Color.Gray, 1);
+            Pen po = new Pen(Color.YellowGreen, 2);
             po.DashStyle = DashStyle.Dot;
             g.DrawLine(po, new Point(0, currentPoint.Y), new Point(Width, currentPoint.Y));
             g.DrawLine(po, new Point(currentPoint.X, 0), new Point(currentPoint.X, Height));
@@ -106,9 +111,9 @@ namespace YOLOLabeler
             List<string> rows = new List<string>();
             float dw = 1.0f / Width;
             float dh = 1.0f / Height;
-            foreach (KeyValuePair<Rectangle, Pen> pair in BBoxes[currentPic])
+            foreach (KeyValuePair<Rectangle, Color> pair in BBoxes[currentPic])
             {
-                int cls_ind = cd.ClassObjects[pair.Value.Color].Item2;
+                int cls_ind = cd.ClassObjects[pair.Value].Item2;
                 float x = (pair.Key.X + (pair.Key.X + pair.Key.Width)) / 2.0f;
                 float y = (pair.Key.Y + (pair.Key.Y + pair.Key.Height)) / 2.0f;
                 x *= dw;
