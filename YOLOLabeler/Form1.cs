@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Security.Policy;
 using System.Windows.Forms;
 
 namespace YOLOLabeler
@@ -518,10 +516,7 @@ namespace YOLOLabeler
         }
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-        //TODO
-
-
+            Process.Start("explorer.exe", "https://github.com/toli23/YOLOLabeler_VP");
         }
     }
 
