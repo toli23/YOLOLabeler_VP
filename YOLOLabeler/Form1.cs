@@ -20,7 +20,6 @@ namespace YOLOLabeler
         private Pen p;
         private Scene s;
         private string filename;
-        private WebBrowser webBrowser1;
 
         public Form1()
         {
@@ -66,7 +65,9 @@ namespace YOLOLabeler
             saveLabels.Visible = false;
             mainPanel.Controls.Add(saveLabels);
 
-            webBrowser1 = new WebBrowser();
+            labelInsertClasses.Left = (colorPanel.Width / 2) - (labelInsertClasses.Width / 2);
+            labelPictures.Left = (mainPanel.Width / 2) - (labelPictures.Width / 2);
+
         }
 
 
@@ -477,7 +478,10 @@ namespace YOLOLabeler
         private void toolStripMenuItemSmall_Click(object sender, EventArgs e)
         {
             s.PenWidth = 1.0f;
-            p = new Pen(p.Color, s.PenWidth);
+            if(p != null)
+            {
+                p.Width = s.PenWidth;
+            }
             toolStripMenuItem3.Checked = true;
             toolStripMenuItem4.Checked = false;
             toolStripMenuItem5.Checked = false;
@@ -488,7 +492,10 @@ namespace YOLOLabeler
         private void toolStripMenuItemMedium_Click(object sender, EventArgs e)
         {
             s.PenWidth = 3.0f;
-            p = new Pen(p.Color, s.PenWidth);
+            if (p != null)
+            {
+                p.Width = s.PenWidth;
+            }
             toolStripMenuItem3.Checked = false;
             toolStripMenuItem4.Checked = true;
             toolStripMenuItem5.Checked = false;
@@ -499,7 +506,10 @@ namespace YOLOLabeler
         private void toolStripMenuItemLarge_Click(object sender, EventArgs e)
         {
             s.PenWidth = 5.0f;
-            p = new Pen(p.Color, s.PenWidth);
+            if (p != null)
+            {
+                p.Width = s.PenWidth;
+            }
             toolStripMenuItem3.Checked = false;
             toolStripMenuItem4.Checked = false;
             toolStripMenuItem5.Checked = true;
