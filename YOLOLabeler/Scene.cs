@@ -29,6 +29,8 @@ namespace YOLOLabeler
 
         public float PenWidth { get; set; }
 
+        public bool CrosshairsEnabled { get; set; }
+
         public List<Stack<Action>> UndoList{ get; set; }
 
 
@@ -46,6 +48,7 @@ namespace YOLOLabeler
             currentPoint = Point.Empty;
             PenWidth = 3.0f;
             UndoList = new List<Stack<Action>>();
+            CrosshairsEnabled = true;
         }
         public void SetCurrentPoint(Point p)
         {
@@ -89,7 +92,10 @@ namespace YOLOLabeler
                 b.Dispose();
                 
             }
-            DrawLines(g);
+            if (CrosshairsEnabled)
+            {
+                DrawLines(g);
+            }
         }
         public void DrawLines (Graphics g)
         {

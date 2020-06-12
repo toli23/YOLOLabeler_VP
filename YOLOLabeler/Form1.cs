@@ -1,19 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
+using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.IO;
-using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Threading.Tasks;
+using System.Security.Policy;
 using System.Windows.Forms;
 
 namespace YOLOLabeler
 {
+
     public partial class Form1 : Form
     {
         private Button browseClasses;
@@ -24,8 +22,8 @@ namespace YOLOLabeler
         private Pen p;
         private Scene s;
         private string filename;
+        private WebBrowser webBrowser1;
 
-        
         public Form1()
         {
             InitializeComponent();
@@ -34,10 +32,11 @@ namespace YOLOLabeler
             s = new Scene(browseClasses.Top + 50, pictureBox1.Width, pictureBox1.Height);
             image = null;
             filename = string.Empty;
-          
+
         }
 
-        private void InitializeDynamic() {
+        private void InitializeDynamic()
+        {
             browseClasses = new Button();
             browseClasses.Text = "Browse";
             browseClasses.Name = "btnBrowse";
@@ -46,6 +45,7 @@ namespace YOLOLabeler
             browseClasses.Left = (colorPanel.Width / 2) - (browseClasses.Width / 2);
             browseClasses.Click += browseClassesButton_Click;
             colorPanel.Controls.Add(browseClasses);
+            
 
 
             browsePictures = new Button();
@@ -68,6 +68,7 @@ namespace YOLOLabeler
             saveLabels.Visible = false;
             mainPanel.Controls.Add(saveLabels);
 
+            webBrowser1 = new WebBrowser();
         }
 
 
@@ -82,23 +83,23 @@ namespace YOLOLabeler
                     MessageBox.Show("The selected file is not .names file");
                     return;
                 }
-               
+
                 using (Stream fileStream = dialog.OpenFile())
                 {
                     string content = s.cd.ReadClassesFromFile(fileStream);
                     GenerateClasses(content);
                 }
-                                   
+
             }
         }
         private void browsePicturesButton_Click(object sender, EventArgs e)
         {
             FolderBrowserDialog dialog = new FolderBrowserDialog();
-            if(dialog.ShowDialog() == DialogResult.OK)
+            if (dialog.ShowDialog() == DialogResult.OK)
             {
                 string folderName = dialog.SelectedPath;
                 string[] paths = Directory.GetFiles(folderName);
-                if(paths.Length == 0)
+                if (paths.Length == 0)
                 {
                     MessageBox.Show("Folder is empty");
                     return;
@@ -106,7 +107,7 @@ namespace YOLOLabeler
                 s.AddPaths(paths);
                 if (image != null)
                 {
-                    image.Dispose(); 
+                    image.Dispose();
                     image = null;
                 }
                 image = new Bitmap(s.PicturePaths[s.currentPic]);
@@ -119,7 +120,7 @@ namespace YOLOLabeler
 
         private void btnSaveLabel_Click(object sender, EventArgs e)
         {
-            if(s.BBoxes[s.currentPic].Count == 0)
+            if (s.BBoxes[s.currentPic].Count == 0)
             {
                 MessageBox.Show("There are no objects selected");
             }
@@ -154,7 +155,7 @@ namespace YOLOLabeler
 
         private void CreateClassesControls(string[] arr)
         {
-            for(int i = 0; i < arr.Length; i++)
+            for (int i = 0; i < arr.Length; i++)
             {
                 Label l = new Label();
                 l.Text = arr[i];
@@ -183,7 +184,7 @@ namespace YOLOLabeler
 
         private void colorPanel_DragOver(object sender, DragEventArgs e)
         {
-            
+
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
                 e.Effect = DragDropEffects.Link;
             else
@@ -195,7 +196,7 @@ namespace YOLOLabeler
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if(files.Length != 1)
+                if (files.Length != 1)
                 {
                     MessageBox.Show("You need to drag one .names file");
                     return;
@@ -205,12 +206,12 @@ namespace YOLOLabeler
                     MessageBox.Show("The selected file is not .names file");
                     return;
                 }
-                using(Stream fileStream = new FileStream(files[0], FileMode.Open, FileAccess.Read))
+                using (Stream fileStream = new FileStream(files[0], FileMode.Open, FileAccess.Read))
                 {
                     string content = s.cd.ReadClassesFromFile(fileStream);
                     GenerateClasses(content);
                 }
-                
+
 
             }
         }
@@ -221,7 +222,7 @@ namespace YOLOLabeler
             {
                 s.isDrawing = false;
             }
-            if(s.currentPic == s.PicturePaths.Count - 2)
+            if (s.currentPic == s.PicturePaths.Count - 2)
             {
                 linkLabelNext.Visible = false;
             }
@@ -271,34 +272,36 @@ namespace YOLOLabeler
             s.EndPos = e.Location;
             s.currentPoint = e.Location;
 
-            toolStripStatusLabel1.Text = string.Format("X: {0}, Y: {1} ", e.Location.X,e.Location.Y);
+            toolStripStatusLabel1.Text = string.Format("X: {0}, Y: {1} ", e.Location.X, e.Location.Y);
 
-            
+
             pictureBox1.Invalidate(true);
-            
+
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            
+
             if (!s.IsBBoxesEmpty() && s.BBoxes[s.currentPic].Count > 0)
-           {
-                s.DrawAll(e.Graphics);
-           }
-            else if(!s.IsPathsEmpty())
             {
-                
-                s.DrawLines(e.Graphics);
+                s.DrawAll(e.Graphics);
             }
-           if (s.isDrawing)
-           {
+            else if (!s.IsPathsEmpty())
+            {
+                if (s.CrosshairsEnabled)
+                {
+                    s.DrawLines(e.Graphics);
+                }
+            }
+            if (s.isDrawing)
+            {
                 Rectangle r = s.GetRectangle();
                 Color c = Color.FromArgb(128, p.Color.R, p.Color.G, p.Color.B);
                 Brush b = new SolidBrush(c);
                 e.Graphics.DrawRectangle(p, r);
                 e.Graphics.FillRectangle(b, r);
                 b.Dispose();
-                
+
 
 
             }
@@ -306,7 +309,7 @@ namespace YOLOLabeler
             {
                 toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
             }
-            
+
         }
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
@@ -395,7 +398,7 @@ namespace YOLOLabeler
         }
         private void LoadFiles()
         {
-           
+
             if (!s.IsPathsEmpty())
             {
                 if (image != null)
@@ -425,9 +428,9 @@ namespace YOLOLabeler
                     linkLabelPrev.Visible = true;
                 }
             }
-           
-            
-          
+
+
+
             if (s.cd.ClassObjects.Count != 0)
             {
                 foreach (Tuple<string, int> t in s.cd.ClassObjects.Values)
@@ -437,7 +440,7 @@ namespace YOLOLabeler
 
                 }
                 s.cd.CurrTop = s.cd.InitTop;
-                foreach (KeyValuePair < Color, Tuple<string, int>> pair in s.cd.ClassObjects)
+                foreach (KeyValuePair<Color, Tuple<string, int>> pair in s.cd.ClassObjects)
                 {
                     Label l = new Label();
                     l.Text = pair.Value.Item1;
@@ -461,7 +464,7 @@ namespace YOLOLabeler
         private void undoToolStripMenuItem_Click(object sender, EventArgs e)
         {
             s.Undo();
-            
+
             toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
             pictureBox1.Invalidate();
 
@@ -471,6 +474,55 @@ namespace YOLOLabeler
         {
             Application.Exit();
         }
+
+
+        private void toolStripMenuItemSmall_Click(object sender, EventArgs e)
+        {
+            s.PenWidth = 1.0f;
+            p = new Pen(p.Color, s.PenWidth);
+            toolStripMenuItem3.Checked = true;
+            toolStripMenuItem4.Checked = false;
+            toolStripMenuItem5.Checked = false;
+            pictureBox1.Invalidate();
+
+
+        }
+        private void toolStripMenuItemMedium_Click(object sender, EventArgs e)
+        {
+            s.PenWidth = 3.0f;
+            p = new Pen(p.Color, s.PenWidth);
+            toolStripMenuItem3.Checked = false;
+            toolStripMenuItem4.Checked = true;
+            toolStripMenuItem5.Checked = false;
+            pictureBox1.Invalidate();
+
+
+        }
+        private void toolStripMenuItemLarge_Click(object sender, EventArgs e)
+        {
+            s.PenWidth = 5.0f;
+            p = new Pen(p.Color, s.PenWidth);
+            toolStripMenuItem3.Checked = false;
+            toolStripMenuItem4.Checked = false;
+            toolStripMenuItem5.Checked = true;
+            pictureBox1.Invalidate();
+
+
+        }
+        private void toolStripMenuItemCrosshairs_Click(object sender, EventArgs e)
+        {
+            s.CrosshairsEnabled = !s.CrosshairsEnabled;
+            toolStripMenuItem2.Checked = s.CrosshairsEnabled;
+            pictureBox1.Invalidate();
+
+        }
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        //TODO
+
+
+        }
     }
-    
+
 }
