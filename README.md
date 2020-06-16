@@ -2,7 +2,7 @@
 Small, lightweight YOLO Labeling tool developed using `.NET Core 3.1 Windows Forms`.
 
 ## Installation
-In the `Releases` tab, there are prebuilt binaries for `x86` and `x64` Windows platforms contained in the `Windows.zip` file.
+In the `Releases` tab, there are prebuilt binaries for `x86` and `x64` Windows platforms contained in the `Windows.zip` file. The `.pdb` files can be ingnored.
 ## Usage
 ### Setup your project
 Locate your `.nammes` file and select a folder with pictures (order doesn't matter).
@@ -27,7 +27,7 @@ You can load your project by going `File > Open` where it restores your previous
 
 ### Additional features
 * Enable Crosshair: `Tools > Crosshairs Enabled`
-* Border Width: `Tools > Border Width > Small|Medium|Large|`
+* Rectangle Border Width: `Tools > Border Width > Small|Medium|Large|`
 
 ## License
 YOLO Labeller is GPL v3.0 licensed, as found in the [LICENSE](LICENSE) file.

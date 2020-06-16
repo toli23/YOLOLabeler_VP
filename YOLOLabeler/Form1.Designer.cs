@@ -298,7 +298,7 @@
             this.toolStripMenuItem5});
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
             this.toolStripMenuItem1.Size = new System.Drawing.Size(216, 26);
-            this.toolStripMenuItem1.Text = "Brush Width";
+            this.toolStripMenuItem1.Text = "Border Width";
             // 
             // toolStripMenuItem3
             // 
