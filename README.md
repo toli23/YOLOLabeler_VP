@@ -7,7 +7,7 @@ In the `Releases` tab, there are prebuilt binaries for `x86` and `x64` Windows p
 ### Select folders and files
 Locate your `.nammes` file and select a folder with pictures.
 
-![](https://media.giphy.com/media/PnVBoFpM3Vt3mzk65X/giphy.gif)
+![](https://media.giphy.com/media/cjF5t7duz0nftAwiQF/giphy.gif)
 
 ## License
 YOLO Labeller is GPL v3.0 licensed, as found in the [LICENSE](LICENSE) file.
