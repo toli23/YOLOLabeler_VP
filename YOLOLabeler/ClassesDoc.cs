@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -6,20 +7,28 @@ using System.Text;
 
 namespace YOLOLabeler
 {
-    [Serializable]
+    [ProtoContract]
     public class ClassesDoc
     {
+        // Initial Top offset from labels panel
+        [ProtoMember(1)]
         public int InitTop { get; set; }
+        // Left offset from labels panel
+        [ProtoMember(2)]
         public int InitLeft { get; set; }
+        // Current top offset from labels panel
+        [ProtoMember(3)]
         public int CurrTop { get; set; }
-        public Dictionary<Color, Tuple<string, int>> ClassObjects { get; set; }
-
+        [ProtoMember(4)]
+        // Key: Color as int, value: tuple of class name, index
+        public Dictionary<int, Tuple<string, int>> ClassObjects { get; set; }
+        
         public ClassesDoc(int InitTop)
         {
             this.InitTop = InitTop;
             InitLeft = 20;
             CurrTop = InitTop;
-            ClassObjects = new Dictionary<Color, Tuple<string, int>>();
+            ClassObjects = new Dictionary<int, Tuple<string, int>>();
         }
         
         public void Clear()
@@ -29,7 +38,7 @@ namespace YOLOLabeler
 
         public bool ColorExists(Color c)
         {
-            return ClassObjects.ContainsKey(c);
+            return ClassObjects.ContainsKey(c.ToArgb());
         }
 
         public bool IsEmpty()
@@ -40,7 +49,7 @@ namespace YOLOLabeler
         public void AddClassAndColor(Color c, string cls, int ind)
         {
 
-            ClassObjects[c] = new Tuple<string, int>(cls, ind);
+            ClassObjects[c.ToArgb()] = new Tuple<string, int>(cls, ind);
         }
 
         public string ReadClassesFromFile(Stream fileStream)

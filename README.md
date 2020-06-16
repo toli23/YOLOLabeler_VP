@@ -17,8 +17,14 @@ You can click ***Next*** or ***Previous*** to go on the next or previous picture
 
 ### Save project
 You can save your project by going `File > Save` which is saved with `.ylp` extension.
+
+![](https://github.com/toli23/YOLOLabeler_VP/blob/master/User%20Guide/draw_stuff.gif)
+
 ### Load project
 You can load your project by going `File > Open` where it restores your previous work (all drawn boxes are saved and redrawn).
+
+![](https://github.com/toli23/YOLOLabeler_VP/blob/master/User%20Guide/load_stuff.gif)
+
 ## License
 YOLO Labeller is GPL v3.0 licensed, as found in the [LICENSE](LICENSE) file.
 

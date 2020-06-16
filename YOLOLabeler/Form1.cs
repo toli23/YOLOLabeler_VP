@@ -6,6 +6,9 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Windows.Forms;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using ProtoBuf;
 
 namespace YOLOLabeler
 {
@@ -113,13 +116,13 @@ namespace YOLOLabeler
                 linkLabelNext.Visible = true;
                 saveLabels.Visible = true;
                 pictureBox1.Image = image;
-                toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
+                toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.ImageBoxes[s.currentPic].GetCount());
             }
         }
 
         private void btnSaveLabel_Click(object sender, EventArgs e)
         {
-            if (s.BBoxes[s.currentPic].Count == 0)
+            if (s.ImageBoxes[s.currentPic].GetCount() == 0)
             {
                 MessageBox.Show("There are no objects selected");
             }
@@ -232,7 +235,7 @@ namespace YOLOLabeler
             }
             image = new Bitmap(s.PicturePaths[++s.currentPic]);
             pictureBox1.Image = image;
-            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
+            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.ImageBoxes[s.currentPic].GetCount());
 
             if (s.currentPic > 0)
             {
@@ -258,7 +261,7 @@ namespace YOLOLabeler
             }
             image = new Bitmap(s.PicturePaths[--s.currentPic]);
             pictureBox1.Image = image;
-            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
+            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.ImageBoxes[s.currentPic].GetCount());
 
             if (s.currentPic != (s.PicturePaths.Count - 1))
             {
@@ -268,8 +271,8 @@ namespace YOLOLabeler
 
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            s.EndPos = e.Location;
-            s.currentPoint = e.Location;
+            s.EndPos.SetCoords(e.Location.X, e.Location.Y);
+            s.currentPoint.SetCoords(e.Location.X, e.Location.Y);
 
             toolStripStatusLabel1.Text = string.Format("X: {0}, Y: {1} ", e.Location.X, e.Location.Y);
 
@@ -281,7 +284,7 @@ namespace YOLOLabeler
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
 
-            if (!s.IsBBoxesEmpty() && s.BBoxes[s.currentPic].Count > 0)
+            if (!s.IsBBoxesEmpty() && s.ImageBoxes[s.currentPic].GetCount() > 0)
             {
                 s.DrawAll(e.Graphics);
             }
@@ -294,9 +297,11 @@ namespace YOLOLabeler
             }
             if (s.isDrawing)
             {
-                Rectangle r = s.GetRectangle();
-                Color c = Color.FromArgb(128, p.Color.R, p.Color.G, p.Color.B);
+                MyRectangle mr = s.GetRectangle();
+                Color c = Color.FromArgb(127, p.Color.R, p.Color.G, p.Color.B);
                 Brush b = new SolidBrush(c);
+                Rectangle r = new Rectangle(mr.X, mr.Y, mr.Width, mr.Height);
+                
                 e.Graphics.DrawRectangle(p, r);
                 e.Graphics.FillRectangle(b, r);
                 b.Dispose();
@@ -306,7 +311,7 @@ namespace YOLOLabeler
             }
             if (!s.IsPathsEmpty())
             {
-                toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
+                toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.ImageBoxes[s.currentPic].GetCount());
             }
 
         }
@@ -327,15 +332,15 @@ namespace YOLOLabeler
                         if (!s.isDrawing)
                         {
                             s.isDrawing = true;
-                            s.StartPos = e.Location;
-                            s.EndPos = e.Location;
+                            s.StartPos.SetCoords(e.Location.X, e.Location.Y);
+                            s.EndPos.SetCoords(e.Location.X, e.Location.Y);
                         }
 
                         else
                         {
                             s.isDrawing = false;
-                            s.EndPos = e.Location;
-                            Rectangle rect = s.GetRectangle();
+                            s.EndPos.SetCoords(e.Location.X, e.Location.Y);
+                            MyRectangle rect = s.GetRectangle();
                             if (rect.Width > 0 && rect.Height > 0)
                             {
                                 s.AddPair(rect, p.Color);
@@ -350,15 +355,15 @@ namespace YOLOLabeler
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Title = "Save our project";
+            saveFileDialog.Title = "Save project";
             saveFileDialog.Filter = "Yolo Labeller Project |*.ylp";
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
                 filename = saveFileDialog.FileName;
-                using (FileStream stream = new FileStream(saveFileDialog.FileName, FileMode.OpenOrCreate))
+
+                using (var file = File.Create(filename))
                 {
-                    IFormatter formatter = new BinaryFormatter();
-                    formatter.Serialize(stream, s);
+                    Serializer.Serialize(file, s);
                 }
             }
         }
@@ -367,10 +372,9 @@ namespace YOLOLabeler
         {
             if (filename != string.Empty)
             {
-                using (FileStream stream = new FileStream(filename, FileMode.OpenOrCreate))
+                using (var file = File.Create(filename))
                 {
-                    IFormatter formatter = new BinaryFormatter();
-                    formatter.Serialize(stream, s);
+                    Serializer.Serialize(file, s);
                 }
             }
             else
@@ -381,16 +385,13 @@ namespace YOLOLabeler
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Title = "Open our project";
+            openFileDialog.Title = "Open project";
             openFileDialog.Filter = "Yolo Labeller Project |*.ylp";
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                using (FileStream stream = new FileStream(openFileDialog.FileName, FileMode.Open))
+                using (var file = File.OpenRead(openFileDialog.FileName))
                 {
-                    IFormatter formatter = new BinaryFormatter();
-                    s = (Scene)formatter.Deserialize(stream);
-                    filename = openFileDialog.FileName;
-
+                    s = Serializer.Deserialize<Scene>(file);
                 }
                 LoadFiles();
             }
@@ -439,7 +440,7 @@ namespace YOLOLabeler
 
                 }
                 s.cd.CurrTop = s.cd.InitTop;
-                foreach (KeyValuePair<Color, Tuple<string, int>> pair in s.cd.ClassObjects)
+                foreach(KeyValuePair<int, Tuple<string, int>> pair in s.cd.ClassObjects)
                 {
                     Label l = new Label();
                     l.Text = pair.Value.Item1;
@@ -452,7 +453,8 @@ namespace YOLOLabeler
                     l.Top = s.cd.CurrTop;
                     l.Left = s.cd.InitLeft + b.Width;
                     s.cd.CurrTop += 20;
-                    b.BackColor = pair.Key;
+                    Color c = Color.FromArgb(pair.Key);
+                    b.BackColor = c;
                     b.Click += colorButton_Click;
                     colorPanel.Controls.Add(b);
                     colorPanel.Controls.Add(l);
@@ -464,7 +466,7 @@ namespace YOLOLabeler
         {
             s.Undo();
 
-            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.BBoxes[s.currentPic].Count);
+            toolStripStatusLabel2.Text = string.Format("Name: {0}, Objects: {1} ", Path.GetFileName(s.PicturePaths[s.currentPic]), s.ImageBoxes[s.currentPic].GetCount());
             pictureBox1.Invalidate();
 
         }

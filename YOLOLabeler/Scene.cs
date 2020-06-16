@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -10,47 +11,69 @@ using System.Text;
 namespace YOLOLabeler
 {
 
-    [Serializable]
+    [ProtoContract]
     public class Scene
     {
+        [ProtoMember(1)]
         public List<string> PicturePaths { get; set; }
-        public List<Dictionary<Rectangle, Color>> BBoxes { get; set; }
-        public Point StartPos { get; set; }
-        public Point EndPos { get; set; }
-
-        public Point currentPoint { get; set; }
-
+        [ProtoMember(2)]
+        public List<ImageBoxes> ImageBoxes { get; set; }
+        [ProtoMember(3)]
+        public MyPoint StartPos { get; set; }
+        [ProtoMember(4)]
+        public MyPoint EndPos { get; set; }
+        [ProtoMember(5)]
+        public MyPoint currentPoint { get; set; }
+        [ProtoMember(6)]
         public int currentPic { get; set; }
+        [ProtoMember(7)]
         public bool isDrawing { get; set; }
-
+        [ProtoMember(8)]
         public int Width { get; set; }
+        [ProtoMember(9)]
         public int Height { get; set; }
+        [ProtoMember(10)]
         public ClassesDoc cd { get; set; }
-
+        [ProtoMember(11)]
         public float PenWidth { get; set; }
-
+        [ProtoMember(12)]
         public bool CrosshairsEnabled { get; set; }
+        [ProtoMember(13)]
+        public List<ActionStack> UndoList{ get; set; }
 
-        public List<Stack<Action>> UndoList{ get; set; }
-
-
+        public Scene()
+        {
+            PicturePaths = new List<string>();
+            ImageBoxes = new List<ImageBoxes>();
+            cd = new ClassesDoc(20);
+            currentPic = 0;
+            StartPos = new MyPoint();
+            EndPos = new MyPoint();
+            isDrawing = false;
+            Width = 800;
+            Height = 600;
+            currentPoint = new MyPoint();
+            PenWidth = 3.0f;
+            UndoList = new List<ActionStack>();
+            CrosshairsEnabled = true;
+        }
         public Scene(int initTop, int w, int h)
         {
             PicturePaths = new List<string>();
-            BBoxes = new List<Dictionary<Rectangle, Color>>();
+            ImageBoxes = new List<ImageBoxes>();
             cd = new ClassesDoc(initTop);
             currentPic = 0;
-            StartPos = Point.Empty;
-            EndPos = Point.Empty;
+            StartPos = new MyPoint();
+            EndPos = new MyPoint();
             isDrawing = false;
             Width = w;
             Height = h;
-            currentPoint = Point.Empty;
+            currentPoint = new MyPoint();
             PenWidth = 3.0f;
-            UndoList = new List<Stack<Action>>();
+            UndoList = new List<ActionStack>();
             CrosshairsEnabled = true;
         }
-        public void SetCurrentPoint(Point p)
+        public void SetCurrentPoint(MyPoint p)
         {
             currentPoint = p;
 
@@ -60,15 +83,15 @@ namespace YOLOLabeler
             PicturePaths.AddRange(paths);
             for(int i = 0; i < PicturePaths.Count; i++)
             {
-                BBoxes.Add(new Dictionary<Rectangle, Color>());
-                UndoList.Add(new Stack<Action>());
+                ImageBoxes.Add(new ImageBoxes());
+                UndoList.Add(new ActionStack());
             }
         }
 
-        public void AddPair(Rectangle r, Color c)
+        public void AddPair(MyRectangle r, Color c)
         {
-            BBoxes[currentPic][r] = c;
-            UndoList[currentPic].Push(new Action(new KeyValuePair<Rectangle, Color>(r,c)));
+            ImageBoxes[currentPic].Add(r, c);
+            UndoList[currentPic].Push(r);
         }
         public bool IsPathsEmpty()
         {
@@ -76,22 +99,14 @@ namespace YOLOLabeler
         }
         public bool IsBBoxesEmpty()
         {
-            return BBoxes.Count == 0;
+            return ImageBoxes.Count == 0;
         }
 
         public void DrawAll(Graphics g)
         {
-            
-            foreach (KeyValuePair<Rectangle,Color> pair in BBoxes[currentPic])
-            {
-                Color c = Color.FromArgb(128, pair.Value.R, pair.Value.G, pair.Value.B);
-                Brush b = new SolidBrush(c);
-                Pen p = new Pen(pair.Value,PenWidth);
-                g.DrawRectangle(p, pair.Key);
-                g.FillRectangle(b, pair.Key);
-                b.Dispose();
-                
-            }
+
+            ImageBoxes[currentPic].DrawBoxes(g, PenWidth);
+
             if (CrosshairsEnabled)
             {
                 DrawLines(g);
@@ -106,14 +121,14 @@ namespace YOLOLabeler
             po.Dispose();
         }
 
-        public Rectangle GetRectangle()
+        public MyRectangle GetRectangle()
         {
-            Rectangle rect = new Rectangle();
-            rect.X = Math.Min(StartPos.X, EndPos.X);
-            rect.Y = Math.Min(StartPos.Y, EndPos.Y);
-
-            rect.Width = Math.Abs(StartPos.X - EndPos.X);
-            rect.Height = Math.Abs(StartPos.Y - EndPos.Y);
+            int x = Math.Min(StartPos.X, EndPos.X);
+            int y = Math.Min(StartPos.Y, EndPos.Y);
+            int w = Math.Abs(StartPos.X - EndPos.X);
+            int h = Math.Abs(StartPos.Y - EndPos.Y);
+            MyRectangle rect = new MyRectangle(x ,y ,w ,h);
+       
 
             return rect;
         }
@@ -123,7 +138,8 @@ namespace YOLOLabeler
             List<string> rows = new List<string>();
             float dw = 1.0f / Width;
             float dh = 1.0f / Height;
-            foreach (KeyValuePair<Rectangle, Color> pair in BBoxes[currentPic])
+            Dictionary<MyRectangle, int> boxes = ImageBoxes[currentPic].GetBoxes();
+            foreach(KeyValuePair<MyRectangle, int> pair in boxes)
             {
                 int cls_ind = cd.ClassObjects[pair.Value].Item2;
                 float x = (pair.Key.X + (pair.Key.X + pair.Key.Width)) / 2.0f;
@@ -144,14 +160,21 @@ namespace YOLOLabeler
         }
         public void Undo()
         {
-            if (UndoList[currentPic].Count != 0)
+            if (UndoList[currentPic].DrawnRectangles.Count != 0)
             {
-                Action a = UndoList[currentPic].Pop();
+                MyRectangle r = UndoList[currentPic].Pop();
 
 
-                BBoxes[currentPic].Remove(a.LastAction.Key);
+                ImageBoxes[currentPic].Remove(r);
                 
             }
+        }
+
+        private Point SerializePoint(string s)
+        {
+            string[] splitted = s.Split(",");
+
+            return new Point(int.Parse(splitted[0]), int.Parse(splitted[1]));
         }
 
     }
