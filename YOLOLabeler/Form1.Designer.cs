@@ -355,7 +355,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "YOLO Labeller";
             this.colorPanel.ResumeLayout(false);
             this.colorPanel.PerformLayout();
             this.mainPanel.ResumeLayout(false);
