@@ -5,6 +5,9 @@ using System.Text;
 
 namespace YOLOLabeler
 {
+    /// <summary>
+    /// Serializable Rectange class
+    /// </summary>
     [ProtoContract]
     public class MyRectangle
     {

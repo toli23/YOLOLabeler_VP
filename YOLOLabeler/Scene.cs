@@ -10,34 +10,75 @@ using System.Text;
 
 namespace YOLOLabeler
 {
-
+    /// <summary>
+    /// Main class used to Save/Load project
+    /// </summary>
     [ProtoContract]
     public class Scene
     {
+        /// <summary>
+        /// List containing the path to each image
+        /// </summary>
         [ProtoMember(1)]
         public List<string> PicturePaths { get; set; }
+        /// <summary>
+        /// List containing the rectangles for each image
+        /// </summary>
         [ProtoMember(2)]
         public List<ImageBoxes> ImageBoxes { get; set; }
+        /// <summary>
+        /// Contaning the X,Y coordinates when the mouse is clicked for the first time
+        /// </summary>
         [ProtoMember(3)]
         public MyPoint StartPos { get; set; }
+        /// <summary>
+        /// Contaning the X,Y coordinates when the mouse is clicked for the second time
+        /// </summary>
         [ProtoMember(4)]
         public MyPoint EndPos { get; set; }
+        /// <summary>
+        /// Contaning the X,Y coordinates of pointer of the mouse on the picture
+        /// </summary>
         [ProtoMember(5)]
         public MyPoint currentPoint { get; set; }
+        /// <summary>
+        /// Index of picture currently showing
+        /// </summary>
         [ProtoMember(6)]
         public int currentPic { get; set; }
+        /// <summary>
+        /// Value singalizing if we are drawing or not
+        /// </summary>
         [ProtoMember(7)]
         public bool isDrawing { get; set; }
+        /// <summary>
+        /// Width of the picture box
+        /// </summary>
         [ProtoMember(8)]
         public int Width { get; set; }
+        /// <summary>
+        /// Height of the picture box
+        /// </summary>
         [ProtoMember(9)]
         public int Height { get; set; }
+        /// <summary>
+        /// Contains information about the colors and classes (labels) names
+        /// </summary>
         [ProtoMember(10)]
         public ClassesDoc cd { get; set; }
+        /// <summary>
+        /// Width of the border of the rectangle
+        /// </summary>
         [ProtoMember(11)]
         public float PenWidth { get; set; }
+        /// <summary>
+        /// Value representing if crosshairs are enabled
+        /// </summary>
         [ProtoMember(12)]
         public bool CrosshairsEnabled { get; set; }
+        /// <summary>
+        /// List containing a stack of actions for each image
+        /// </summary>
         [ProtoMember(13)]
         public List<ActionStack> UndoList{ get; set; }
 
@@ -73,11 +114,19 @@ namespace YOLOLabeler
             UndoList = new List<ActionStack>();
             CrosshairsEnabled = true;
         }
+        /// <summary>
+        /// Sets the current Point to the mouse location on the picture
+        /// </summary>
+        /// <param name="p">Serializable Point object</param>
         public void SetCurrentPoint(MyPoint p)
         {
             currentPoint = p;
 
         }
+        /// <summary>
+        /// Saves the paths to each image
+        /// </summary>
+        /// <param name="paths">String array of paths to images</param>
         public void AddPaths(string[] paths)
         {
             PicturePaths.AddRange(paths);
@@ -101,7 +150,10 @@ namespace YOLOLabeler
         {
             return ImageBoxes.Count == 0;
         }
-
+        /// <summary>
+        /// Draws all rectangles on the given picture
+        /// </summary>
+        /// <param name="g">Graphics object</param>
         public void DrawAll(Graphics g)
         {
 
@@ -112,6 +164,10 @@ namespace YOLOLabeler
                 DrawLines(g);
             }
         }
+        /// <summary>
+        /// Draws the crosshairs
+        /// </summary>
+        /// <param name="g">Graphics object</param>
         public void DrawLines (Graphics g)
         {
             Pen po = new Pen(Color.Gold, 3.5f);
@@ -132,7 +188,9 @@ namespace YOLOLabeler
 
             return rect;
         }
-
+        /// <summary>
+        /// Saves a .txt label file for the given image
+        /// </summary>
         public void SaveLabels()
         {
             List<string> rows = new List<string>();
@@ -158,6 +216,9 @@ namespace YOLOLabeler
             }
             File.WriteAllLines(Path.Combine("labels", FileName), rows);
         }
+        /// <summary>
+        /// Performs undo action for the given picture
+        /// </summary>
         public void Undo()
         {
             if (UndoList[currentPic].DrawnRectangles.Count != 0)
@@ -169,13 +230,5 @@ namespace YOLOLabeler
                 
             }
         }
-
-        private Point SerializePoint(string s)
-        {
-            string[] splitted = s.Split(",");
-
-            return new Point(int.Parse(splitted[0]), int.Parse(splitted[1]));
-        }
-
     }
 }

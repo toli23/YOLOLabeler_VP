@@ -6,11 +6,16 @@ using System.Text;
 
 namespace YOLOLabeler
 {
+    /// <summary>
+    /// Holds the rectangles for an image
+    /// </summary>
     [ProtoContract]
     public class ImageBoxes
     {
+        /// <summary>
+        /// Key: Serializable Rectangle, Value: Color as int
+        /// </summary>
         [ProtoMember(1)]
-        // Key: Rectangle, Value: Color as int
         public Dictionary<MyRectangle, int> BBoxes {get; set;}
         public ImageBoxes()
         {

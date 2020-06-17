@@ -10,17 +10,26 @@ namespace YOLOLabeler
     [ProtoContract]
     public class ClassesDoc
     {
-        // Initial Top offset from labels panel
+        /// <summary>
+        /// Initial Top offset from labels panel
+        /// </summary>
         [ProtoMember(1)]
         public int InitTop { get; set; }
-        // Left offset from labels panel
+        /// <summary>
+        /// Left offset from labels panel
+        /// </summary>
         [ProtoMember(2)]
         public int InitLeft { get; set; }
-        // Current top offset from labels panel
+        /// <summary>
+        /// Current top offset from labels panel
+        /// </summary>
         [ProtoMember(3)]
         public int CurrTop { get; set; }
+        /// <summary>
+        /// Holds a pair of color value and class label
+        /// Key: Color as int, value: tuple of class name, index
+        /// </summary>
         [ProtoMember(4)]
-        // Key: Color as int, value: tuple of class name, index
         public Dictionary<int, Tuple<string, int>> ClassObjects { get; set; }
         
         public ClassesDoc(int InitTop)

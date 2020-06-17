@@ -6,6 +6,9 @@ using System.Text;
 
 namespace YOLOLabeler
 {
+    /// <summary>
+    /// Serializable Point class
+    /// </summary>
     [ProtoContract]
     public class MyPoint
     {
