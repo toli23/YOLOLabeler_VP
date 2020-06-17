@@ -7,6 +7,9 @@ using System.Text;
 
 namespace YOLOLabeler
 {
+    ///<sumary>
+    /// Holds information about the colors for each class label
+    ///</summary>
     [ProtoContract]
     public class ClassesDoc
     {
