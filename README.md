@@ -1,5 +1,5 @@
 # YOLO Labeller
-Small, lightweight YOLO Labeling tool developed using `.NET Core 3.1 Windows Forms`.
+Small, lightweight YOLO Labeling tool developed using `.NET Core 3.1 Windows Forms`. It is used to generate labels for each picture that later can be used for training the deep learning model YOLO.
 
 ## Installation
 In the `Releases` tab, there are prebuilt binaries for `x86` and `x64` Windows platforms contained in the `Windows.zip` file. The `.pdb` files can be ingnored.
