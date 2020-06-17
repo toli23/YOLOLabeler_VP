@@ -29,6 +29,8 @@ You can load your project by going `File > Open` where it restores your previous
 * Enable Crosshair: `Tools > Crosshairs Enabled`
 * Rectangle Border Width: `Tools > Border Width > Small|Medium|Large`
 
+More details about the implementation can be found in the [Wiki](https://github.com/toli23/YOLOLabeler_VP/wiki) page.
+
 ## License
 YOLO Labeller is GPL v3.0 licensed, as found in the [LICENSE](LICENSE) file.
 
